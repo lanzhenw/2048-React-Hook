@@ -1,0 +1,15 @@
+.container {
+    width: 700px;
+    height: 700px;
+    margin: 30px auto;
+    background-color: hsl(233, 29%, 95%);
+}
+
+.board {
+    margin: 30px auto;
+    min-width: 400px;
+}
+
+.gameTitle {
+    margin: 10px 30px 10px 30px;
+}

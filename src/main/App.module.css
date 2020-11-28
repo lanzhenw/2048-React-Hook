@@ -1,0 +1,5 @@
+body {
+  background-image: url("../resources/pattern.png");
+  background-repeat: repeat;
+  font-size: calc(12px + 2vh);
+}
