@@ -4,6 +4,7 @@ import {Text, ActionButton, IIconProps, Stack, TooltipHost, ITooltipHostStyles} 
 import useEventListener from "@use-it/event-listener"
 import Board from './Board'
 import Success from './Dialog/Success'
+import { GameEnding } from './Dialog/GameEnding';
 
 
 
@@ -14,7 +15,7 @@ const rightIcon: IIconProps = {iconName: "Forward"}
 
 interface IState {
     board: number[][],
-    move: boolean,
+    move: boolean, // this is used in useEffect to detect a new user direction movement
     direction?: string,
     getNew: boolean,
     score: number,
@@ -187,7 +188,12 @@ const rotateLeft: (board: number[][]) => number[][] = (board) => {
       } else return false
   }
 
-// Game Component
+//   =======================================================================================================
+//   =======================================================================================================
+//                                  Game Component
+//   =======================================================================================================
+//   =======================================================================================================
+
 const Game: React.FunctionComponent = () => {
     let initialState: IState = {
         board: [[0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]],
@@ -196,7 +202,7 @@ const Game: React.FunctionComponent = () => {
         getNew: false,
         showSuccessDialog: false,
         hasReached2048: false,
-        showFailureDialog: true,
+        showFailureDialog: false,
         score: 0, 
         reset: false,
         showErrorDialog: false,
@@ -327,6 +333,14 @@ const Game: React.FunctionComponent = () => {
         setstate(s => ({...s, showSuccessDialog: false, hasReached2048: true}))
     }
 
+    const closeFailureDialog: () => void = () => {
+        setstate(s => ({...s, showFailureDialog: false}))
+    }
+
+    const onStartNewGame: () => void = () => {
+        setstate(s => ({...s, showFailureDialog: false, reset: true}))
+    }
+
     const logScore: () => void = () => {
 
     }
@@ -363,6 +377,12 @@ const Game: React.FunctionComponent = () => {
             showDialog={state.showSuccessDialog} 
             closeDialog={closeSuccessDialog}
             logScore={logScore}/>
+          <GameEnding 
+            hideDialog={!state.showFailureDialog}
+            closeDialog={closeFailureDialog}
+            logScore={logScore} 
+            onRefresh={onStartNewGame}
+            hasWon={state.hasReached2048}/>
       </div>
   )
 }
