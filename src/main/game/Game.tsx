@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react'
 import style from "./Game.module.css"
-import {Text, ActionButton, IIconProps, Stack} from "office-ui-fabric-react"
+import {Text, ActionButton, IIconProps, Stack, TooltipHost, ITooltipHostStyles} from "office-ui-fabric-react"
 import useEventListener from "@use-it/event-listener"
 import Board from './Board'
+import Success from './Dialog/Success'
 
 
 
@@ -24,10 +25,6 @@ interface IState {
     showErrorDialog: boolean,
 }
 
-const UP_KEYS = ["ArrowUp"]
-const DOWN_KEYS = ["ArrowDown"]
-const LEFT_KEYS = ["ArrowLeft"]
-const RIGHT_KEYS = ["ArrowRight"]
 
 
 // ====================================================================
@@ -113,8 +110,10 @@ const merge2Right: (board: number[][], score: number) => {board: number[][], sco
       for (let row = board[col].length - 1; row > 0; row--) {
         if (board[col][row] > 0 && board[col][row] === board[col][row - 1]) {
           board[col][row] = 2 * board[col][row]
+         
           score = score + board[col][row]
           console.log("+ ", board[col][row])
+          
           board[col][row - 1] = 0
           board[col] = shiftRowRight(board[col])
         }
@@ -188,14 +187,14 @@ const rotateLeft: (board: number[][]) => number[][] = (board) => {
       } else return false
   }
 
-
+// Game Component
 const Game: React.FunctionComponent = () => {
     let initialState: IState = {
         board: [[0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]],
         direction: undefined,
         move: false,
         getNew: false,
-        showSuccessDialog: true,
+        showSuccessDialog: false,
         hasReached2048: false,
         showFailureDialog: true,
         score: 0, 
@@ -220,21 +219,24 @@ const Game: React.FunctionComponent = () => {
 
     useEffect(() => {
         let boardCopy:number[][] = deepCopy(state.board)
-        let score: number 
+        var newscore: number = state.score
         if (!state.move) return
         if (!passDirectionCheck(state.direction)) return 
         if (state.direction === "right" ) {
             boardCopy = shiftMatrixRight(boardCopy)
             boardCopy = merge2Right(boardCopy, state.score).board
+            newscore = merge2Right(boardCopy, state.score).score
         }
         if (state.direction === "left") {
             boardCopy = shiftMatrixLeft(boardCopy)
             boardCopy = merge2Left(boardCopy, state.score).board
+            newscore = merge2Left(boardCopy, state.score).score
         }
-        if (state.direction === "up"){
+        if (state.direction === "up") {
             boardCopy = rotateRight(boardCopy)
             boardCopy = shiftMatrixRight(boardCopy)
             boardCopy = merge2Right(boardCopy, state.score).board
+            newscore = merge2Right(boardCopy, state.score).score
             boardCopy = rotateLeft(boardCopy)
           
         }
@@ -242,6 +244,7 @@ const Game: React.FunctionComponent = () => {
             boardCopy = rotateRight(boardCopy)
             boardCopy = shiftMatrixLeft(boardCopy)
             boardCopy = merge2Left(boardCopy, state.score).board
+            newscore = merge2Left(boardCopy, state.score).score
             boardCopy = rotateLeft(boardCopy)
         }
 
@@ -249,18 +252,17 @@ const Game: React.FunctionComponent = () => {
         
         if (isMoved(state.board, boardCopy)) {
             boardCopy = addNewNumber(boardCopy)
-            score = state.score + 2 // every solid move will get 2 points
-            console.log("+ 2")
-            
+            newscore += 2
+            console.log("+2")
             if (isGameOver(boardCopy)) {
-                setstate(prevState => ({...prevState, board: boardCopy, score: score, showFailureDialog: true, move: false}))
+                setstate(prevState => ({...prevState, board: boardCopy, score: newscore , showFailureDialog: true, move: false}))
             } else {
                 if (hasReached2048(boardCopy)) {
                     if (!state.hasReached2048){
-                        setstate(prevState => ({...prevState, board: boardCopy, hasReached2048: true, score: score, showSuccessDialog: true, move: false}))
+                        setstate(prevState => ({...prevState, board: boardCopy, hasReached2048: true, score: newscore, showSuccessDialog: true, move: false}))
                     }
                 } else {
-                    setstate(prevState => ({...prevState, board: boardCopy, score: score, move: false}))
+                    setstate(prevState => ({...prevState, board: boardCopy, score: newscore , move: false}))
                 }
             }
         } else {
@@ -318,11 +320,24 @@ const Game: React.FunctionComponent = () => {
         setstate(s => ({...s, direction: "right", move: true}))
     }
 
+    const calloutProps = {gapSpace: 0}
+    const hostStyles: Partial<ITooltipHostStyles> = {root : { display: "inline-block"}}
+
+    const closeSuccessDialog: () => void = () => {
+        setstate(s => ({...s, showSuccessDialog: false, hasReached2048: true}))
+    }
+
+    const logScore: () => void = () => {
+
+    }
+
+    
 
   return (
       <div className={style.container}>
           <Stack tokens={{childrenGap: 10}} horizontal horizontalAlign="space-between">
             <Text variant="xxLarge" className={style.gameTitle}> 2048</Text>
+
             <Text variant="xxLarge"  className={style.gameTitle}> Score: {state.score}</Text>
           </Stack>
           <Stack tokens={{childrenGap: 10}} horizontal horizontalAlign="center">
@@ -335,7 +350,19 @@ const Game: React.FunctionComponent = () => {
               <ActionButton iconProps={rightIcon} title="move right" ariaLabel="right" onClick={() => handleRight()}/>
           </Stack>
           <Board board={state.board}/>
-          
+          <TooltipHost 
+            content="This is a math game. You can press up, down, left, right keys or use the buttons to control the direction movement. After each move, adjacent tiles will merge along the moving direction. Can you reach 2048?"
+            calloutProps={calloutProps}
+            styles={hostStyles}
+            closeDelay={500}
+            className={style.instruction}
+            >
+                <Text variant="xLarge" className={style.instruction}>How to play?</Text>
+          </TooltipHost>
+          <Success 
+            showDialog={state.showSuccessDialog} 
+            closeDialog={closeSuccessDialog}
+            logScore={logScore}/>
       </div>
   )
 }
