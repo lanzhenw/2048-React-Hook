@@ -4,7 +4,7 @@ import Game from './game/Game';
 import {initializeIcons} from "@uifabric/icons"
 
 
-export const App: React.FunctionComponent = () => {
+const App: React.FunctionComponent = () => {
   initializeIcons();
   return (
     <div className={appStyle.body}>
@@ -13,3 +13,4 @@ export const App: React.FunctionComponent = () => {
   )
     
 };
+export default App

@@ -31,7 +31,7 @@ interface IState {
 // ====================================================================
 //      Pure Functions that changes the board based on game movement
 // ====================================================================
-const isMoved:(oldboard: number[][], newboard: number[][]) => boolean = (oldboard: number[][], newboard:number[][]) => {
+export const isMoved:(oldboard: number[][], newboard: number[][]) => boolean = (oldboard: number[][], newboard:number[][]) => {
     if (JSON.stringify(oldboard) === JSON.stringify(newboard)) {
       return false
     } else {
@@ -43,7 +43,7 @@ const deepCopy: (arg0: any) => any = (x) => {
     return JSON.parse(JSON.stringify(x))
 }
   
-const getBlankCordinates:(board: number[][]) => number[][] = (board:number[][]) => {
+export const getBlankCordinates:(board: number[][]) => number[][] | [] = (board:number[][]) => {
     // this takes in this.state.board, returns an array of blank coordinates
     const blankCoordinates = []
     for (let row = 0; row < board.length; row++) {
@@ -167,14 +167,32 @@ const rotateLeft: (board: number[][]) => number[][] = (board) => {
     return newboard
   }
   
-  const isGameOver: (board:number[][]) => boolean = (board) => {
-    return  getBlankCordinates(board).length === 0 ? true : false
+  export const isGameOver: (board:number[][]) => boolean = (board) => {
+    if (getBlankCordinates(board).length !== 0) return false 
+        else if (canMakeNewMove(board)) {
+            return false
+        } else {
+            return true
+        }
+
   }
 
-  const hasReached2048: (board: number[][]) => boolean = (board) => {
+  export const canMakeNewMove: (board: number[][]) => boolean = (board) => {
+      let newboard1 = merge2Right(board, 0).board
+      let newboard2 = merge2Left(board, 0).board
+      let newboard3 = rotateLeft(merge2Right(rotateRight(board), 0).board)
+      let newboard4 = rotateRight(merge2Left(rotateLeft(board), 0).board)
+    
+      if (isMoved(board, newboard1) || isMoved(board, newboard2) 
+      || isMoved(board, newboard3) || isMoved(board, newboard4))
+        return true
+        return false
+  }
+
+  export const hasReached2048: (board: number[][]) => boolean = (board) => {
     board.forEach(row => {
         row.forEach(cell => {
-            if (cell === 2048) {
+            if (cell >= 2048) {
                 return true
             }
         })
@@ -182,7 +200,7 @@ const rotateLeft: (board: number[][]) => number[][] = (board) => {
     return false
   }
 
-  const passDirectionCheck: (direction: string | undefined) => boolean = (direction) => {
+  export const passDirectionCheck: (direction: string | undefined) => boolean = (direction) => {
       if (direction === "left" || direction === "right" || direction === "up" || direction === "down") {
           return true
       } else return false
@@ -228,30 +246,31 @@ const Game: React.FunctionComponent = () => {
         var newscore: number = state.score
         if (!state.move) return
         if (!passDirectionCheck(state.direction)) return 
-        if (state.direction === "right" ) {
-            boardCopy = shiftMatrixRight(boardCopy)
-            boardCopy = merge2Right(boardCopy, state.score).board
-            newscore = merge2Right(boardCopy, state.score).score
-        }
-        if (state.direction === "left") {
-            boardCopy = shiftMatrixLeft(boardCopy)
-            boardCopy = merge2Left(boardCopy, state.score).board
-            newscore = merge2Left(boardCopy, state.score).score
-        }
-        if (state.direction === "up") {
-            boardCopy = rotateRight(boardCopy)
-            boardCopy = shiftMatrixRight(boardCopy)
-            boardCopy = merge2Right(boardCopy, state.score).board
-            newscore = merge2Right(boardCopy, state.score).score
-            boardCopy = rotateLeft(boardCopy)
-          
-        }
-        if (state.direction === "down") {
-            boardCopy = rotateRight(boardCopy)
-            boardCopy = shiftMatrixLeft(boardCopy)
-            boardCopy = merge2Left(boardCopy, state.score).board
-            newscore = merge2Left(boardCopy, state.score).score
-            boardCopy = rotateLeft(boardCopy)
+        switch(state.direction) {
+            case "right": 
+                boardCopy = shiftMatrixRight(boardCopy)
+                boardCopy = merge2Right(boardCopy, state.score).board
+                newscore = merge2Right(boardCopy, state.score).score
+                break;
+            case "left":
+                boardCopy = shiftMatrixLeft(boardCopy)
+                boardCopy = merge2Left(boardCopy, state.score).board
+                newscore = merge2Left(boardCopy, state.score).score
+                break;
+            case "up":
+                boardCopy = rotateRight(boardCopy)
+                boardCopy = shiftMatrixRight(boardCopy)
+                boardCopy = merge2Right(boardCopy, state.score).board
+                newscore = merge2Right(boardCopy, state.score).score
+                boardCopy = rotateLeft(boardCopy)
+                break;
+            case "down":
+                boardCopy = rotateRight(boardCopy)
+                boardCopy = shiftMatrixLeft(boardCopy)
+                boardCopy = merge2Left(boardCopy, state.score).board
+                newscore = merge2Left(boardCopy, state.score).score
+                boardCopy = rotateLeft(boardCopy)
+                break;
         }
 
         // update the state changes based on the moves: we will first check whether the board has valid moves, then we will check if the game is over, last if the user has reached 2048 for the first time, we show a success message. 
@@ -295,8 +314,6 @@ const Game: React.FunctionComponent = () => {
                 break;
         }
     }
-
-
 
     useEventListener("keydown", keyboardHandler)
     
