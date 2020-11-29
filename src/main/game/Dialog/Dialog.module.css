@@ -1,0 +1,25 @@
+.content {
+    display: flex;
+    
+    margin-bottom: 20px;
+}
+
+.checkIcon {
+    font-size: 40px;
+    margin-right: 20px;
+    align-self: center;
+}
+
+.text {
+    align-self: center
+}
+
+.warningIcon {
+    font-size: 40px;
+    margin-right: 20px;
+    align-self: center;
+}
+
+.spinner {
+    margin-left: 10px;
+}
