@@ -1,10 +1,11 @@
-import React, { useEffect, useState } from 'react'
+import React, { forwardRef, useEffect, useState } from 'react'
 import style from "./Game.module.css"
-import {Text, ActionButton, IIconProps, Stack, TooltipHost, ITooltipHostStyles} from "office-ui-fabric-react"
+import {Text, ActionButton, IIconProps, Stack, TooltipHost, ITooltipHostStyles, IRefObject, ITextField} from "office-ui-fabric-react"
 import useEventListener from "@use-it/event-listener"
 import Board from './Board'
 import Success from './Dialog/Success'
 import { GameEnding } from './Dialog/GameEnding';
+import LogScore from './Dialog/LogScore'
 
 
 
@@ -23,10 +24,9 @@ interface IState {
     hasReached2048: boolean,
     showFailureDialog: boolean, 
     reset: boolean, 
-    showErrorDialog: boolean,
+    showScoreDialog: boolean,
+    isProcessing: boolean,
 }
-
-
 
 // ====================================================================
 //      Pure Functions that changes the board based on game movement
@@ -223,10 +223,11 @@ const Game: React.FunctionComponent = () => {
         showFailureDialog: false,
         score: 0, 
         reset: false,
-        showErrorDialog: false,
+        showScoreDialog: false,
+        isProcessing:false,
     }
     const [state, setstate] = useState(initialState)
-
+    const nameRef: React.RefObject<ITextField> = React.createRef()
     useEffect(() => {
         setstate(state => ({...initialState, reset: true}))
         // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -243,7 +244,7 @@ const Game: React.FunctionComponent = () => {
 
     useEffect(() => {
         let boardCopy:number[][] = deepCopy(state.board)
-        var newscore: number = state.score
+        let newscore:number = state.score
         if (!state.move) return
         if (!passDirectionCheck(state.direction)) return 
         switch(state.direction) {
@@ -273,12 +274,15 @@ const Game: React.FunctionComponent = () => {
                 break;
         }
 
-        // update the state changes based on the moves: we will first check whether the board has valid moves, then we will check if the game is over, last if the user has reached 2048 for the first time, we show a success message. 
+        // update the state changes based on the moves: 
+        // we will first check whether the board has valid moves, 
+        // then we will check if the game is over, 
+        // last if the user has reached 2048 for the first time, we show a success message. 
         
         if (isMoved(state.board, boardCopy)) {
             boardCopy = addNewNumber(boardCopy)
             newscore += 2
-            console.log("+2")
+         
             if (isGameOver(boardCopy)) {
                 setstate(prevState => ({...prevState, board: boardCopy, score: newscore , showFailureDialog: true, move: false}))
             } else {
@@ -317,52 +321,36 @@ const Game: React.FunctionComponent = () => {
 
     useEventListener("keydown", keyboardHandler)
     
-    // button event handler
-    const start:() => void = () => {
-        console.log("Start a new game")
-        setstate(state => ({...state, reset: true}))
-    }
-
-    const handleUp: () => void = () => {
-        console.log("you pressed up")
-        setstate(s => ({...s, direction: "up", move: true}))
-    }
-
-    const handleDown: () => void = () => {
-        console.log("you pressed down")
-        setstate(s => ({...s, direction: "down", move: true}))
-    }
-
-    const handleLeft: () => void = () => {
-        console.log("you pressed left")
-        setstate(s => ({...s, direction: "left", move: true}))
-    }
-
-    const handleRight: () => void = () => {
-        console.log("you pressed right")
-        setstate(s => ({...s, direction: "right", move: true}))
-    }
+    // button event handler that mutate the state
+    const start:() => void = () => { setstate(state => ({...state, reset: true}))}
+    const handleUp: () => void = () => {setstate(s => ({...s, direction: "up", move: true}))}
+    const handleDown: () => void = () => {setstate(s => ({...s, direction: "down", move: true}))}
+    const handleLeft: () => void = () => {setstate(s => ({...s, direction: "left", move: true}))}
+    const handleRight: () => void = () => {setstate(s => ({...s, direction: "right", move: true}))}
+    // dialog buttons eventhandlers to be passed as props to child components
+    const closeSuccessDialog: () => void = () => {setstate(s => ({...s, showSuccessDialog: false, hasReached2048: true}))}
+    const closeFailureDialog: () => void = () => {setstate(s => ({...s, showFailureDialog: false}))}
+    const onStartNewGame: () => void = () => {setstate(s => ({...s, showFailureDialog: false, reset: true}))}
+    const logScore: () => void = () => {setstate(s => ({...s, showScoreDialog: true}))}
+    const closeScoreDialog: () => void = () => { setstate(s => ({...s, showScoreDialog:false}))}
 
     const calloutProps = {gapSpace: 0}
     const hostStyles: Partial<ITooltipHostStyles> = {root : { display: "inline-block"}}
 
-    const closeSuccessDialog: () => void = () => {
-        setstate(s => ({...s, showSuccessDialog: false, hasReached2048: true}))
+    // call api
+    const passValidation = (input?: string) => {
+        return !input ? false
+            : input.trim() === "" 
+            ? false 
+            : input.length < 3
+            ? false : true
     }
-
-    const closeFailureDialog: () => void = () => {
-        setstate(s => ({...s, showFailureDialog: false}))
+     const  onHandleSubmitScore =  async (input?:string) => {
+        if (!passValidation(input)) return
+        setstate(s => ({...s, isProcessing: true}))
+        // call api, change isProcessing
+        // in response 
     }
-
-    const onStartNewGame: () => void = () => {
-        setstate(s => ({...s, showFailureDialog: false, reset: true}))
-    }
-
-    const logScore: () => void = () => {
-
-    }
-
-    
 
   return (
       <div className={style.container}>
@@ -400,6 +388,13 @@ const Game: React.FunctionComponent = () => {
             logScore={logScore} 
             onRefresh={onStartNewGame}
             hasWon={state.hasReached2048}/>
+          <LogScore
+            hideDialog={!state.showScoreDialog}
+            isProcessing={state.isProcessing}
+            closeDialog={closeScoreDialog}
+            onSubmit={onHandleSubmitScore}
+            score={state.score} 
+            forwardRef={nameRef}/>
       </div>
   )
 }
