@@ -1,5 +1,5 @@
 
-import {canMakeNewMove, hasReached2048, passDirectionCheck, isGameOver, isMoved, getBlankCordinates} from "./Game"
+import {canMakeNewMove, hasReached2048, passDirectionCheck, isGameOver, isMoved, getBlankCordinates} from "./Logic"
 
 describe("Game logic is right", () => {
     it ("canMakeNewMove", () => {

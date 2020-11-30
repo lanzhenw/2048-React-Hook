@@ -88,3 +88,28 @@
     font-size:30px;
     background-color:rgb(149,69,103)
   }
+
+
+  @-webkit-keyframes pop-in {
+    0%   { opacity: 0; }
+    100% { opacity: 1; }
+  }
+  @-moz-keyframes pop-in {
+    0%   { opacity: 0; }
+    100% { opacity: 1; }
+  }
+  @-o-keyframes pop-in {
+    0%   { opacity: 0; }
+    100% { opacity: 1; }
+  }
+  @keyframes pop-in {
+    0%   { opacity: 0; }
+    100% { opacity: 1; }
+  }
+
+  .new {
+    animation:
+      pop-in 1s
+  }
+
+  

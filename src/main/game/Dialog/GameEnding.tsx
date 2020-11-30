@@ -9,7 +9,7 @@ interface IProps {
     onRefresh: () => void
 }
 
-export const GameEnding: React.FunctionComponent<IProps> = ({
+const GameEnding: React.FunctionComponent<IProps> = ({
     hideDialog,
     hasWon,
     logScore,
@@ -59,3 +59,5 @@ export const GameEnding: React.FunctionComponent<IProps> = ({
         </Dialog>
     )
 }
+
+export default GameEnding
