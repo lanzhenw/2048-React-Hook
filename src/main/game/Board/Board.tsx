@@ -9,17 +9,41 @@ const Board:React.FunctionComponent<IProp> = ({board, newIdx}) => {
   
     return (
         <div className={style.gameBoard}>
+        <table className={style.boardFrame}>
+          <tr>
+            <th></th>
+            <th></th>
+            <th></th>
+            <th></th>
+          </tr>
+          <tr>
+            <th></th>
+            <th></th>
+            <th></th>
+            <th></th>
+          </tr>
+          <tr>
+            <th></th>
+            <th></th>
+            <th></th>
+            <th></th>
+          </tr>
+          <tr>
+            <th></th>
+            <th></th>
+            <th></th>
+            <th></th>
+          </tr>
+        </table>
         {board.map((row, i) => (
           <div key={i} className={style.row}>
             {row.map((col, j) => {
-        
               return (
                 newIdx.includes(i+"-"+j) 
                         ? (<span key={j} className={[style['block-value-' + board[i][j]], style.new].join(" ")}
                         data-testid={i + "-" + j}>{board[i][j]}</span>) 
                         :  (<span key={j} className={style['block-value-' + board[i][j]]}
                       data-testid={i + "-" + j}>{board[i][j]}</span>)
-               
               )
               
             })}
